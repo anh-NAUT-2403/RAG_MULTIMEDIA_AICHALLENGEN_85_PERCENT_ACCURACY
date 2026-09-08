@@ -1,3 +1,8 @@
+# ĐÂY SẼ LÀ BASE KIT ĐỂ NHỮNG NGƯỜI MỚI MUỐN THAM GIA AI CHALLENGEN CÓ CÁI ĐỂ THAM KHẢO VÀ NÂNG CẤP THÊM.
+ƯU ĐIỂM LÀ CHÍNH XÁC CAO VỚI CÁC QUERY PHỨC TẠP, CỰC TỐT CHO BÀI TRAKE VÀ CÁC BÀI CHỨA CÁC HÀNH ĐỘNG PHỨC TẠP LIÊN TIẾP
+NHƯỢC ĐIỂM LÀ CHƯA TÍCH HỢP TÁCH GIỌNG NÓI NÊN NHỮNG CÂU QUERY LIÊN QUAN TỚI ÂM THANH SẼ CHƯA LÀM ĐƯỢC. BÊN CẠNH ĐÓ SẼ HỆ THỐNG THIẾU CHÍNH XÁC VỚI CÁC CÂU QUERY MANG TÍNH CHUNG CHUNG. 
+HY VỌNG MỌI NGƯỜI SẼ CẢI THIỆN HỆ THỐNG NÀY TỐT HƠN <3. 
+
 # Colab Keyframe Agent
 
 Pipeline tìm keyframe theo phương pháp hai tầng có vòng lặp thích ứng:
