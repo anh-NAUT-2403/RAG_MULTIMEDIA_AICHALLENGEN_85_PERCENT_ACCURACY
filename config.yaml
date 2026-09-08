@@ -1,0 +1,207 @@
+# All relative data paths are resolved below data.root.
+data:
+  root: "/content/drive/MyDrive/AICHALLENGENHCM2026/AI CHALLENGEN HCM2026"
+  feature_zip: "clip-features-32-aic25-b1.zip"
+  mapping_zip: "map-keyframes-aic25-b1.zip"
+  keyframe_zip_glob: "Keyframes_*.zip"
+  video_zip_glob: "Videos_*.zip"
+  cache_dir: "/content/keyframe_agent_cache"
+  output_dir: "/content/keyframe_agent_outputs"
+
+retrieval:
+  clip_model: "openai/clip-vit-base-patch32"
+  device: "auto"
+  main_weight: 0.70
+  support_weight: 0.15
+  max_support_queries: 2
+  top_per_video: 4
+  shortlist_size: 40
+  max_candidates_per_video: 3
+  max_rounds: 2
+  visual_accept_score: 72
+
+contact_sheet:
+  columns: 4
+  cards_per_sheet: 20
+  card_width: 420
+  card_height: 286
+  image_height: 224
+  jpeg_quality: 92
+
+openai:
+  api_key_env: "OPENAI_API_KEY"
+  model: "gpt-5.6-luna"
+  reasoning_effort: "low"
+  image_detail: "high"
+  # Multi-event trả nhiều frame nên cần trần JSON cao hơn. Đây là giới hạn tối đa,
+  # không phải số token API luôn sử dụng.
+  max_output_tokens: 7000
+  retries: 3
+  retry_base_seconds: 2.0
+  # Số frame lân cận VLM xếp hạng ở bước cuối (từ 5 đến 10).
+  # Tăng: có thêm phương án gần giống để tự so sánh, JSON/API dài hơn.
+  # Giảm: kết quả gọn và rẻ hơn. Frame đầu tiên vẫn là đáp án chính.
+  final_candidate_count: 8
+
+refinement:
+  finalists: 5
+  neighbor_radius: 3
+  use_raw_video_for_motion: true
+  raw_video_finalists: 2
+  video_window_before: 5.0
+  video_window_after: 5.0
+  static_fps: 1.0
+  motion_fps: 3.0
+  max_sampled_frames: 30
+  final_confidence_threshold: 0.55
+
+# LLM tự phân loại điều kiện; code chỉ hard-gate theo loại, không hardcode từ khóa.
+verification:
+  enabled: true
+  # context không nằm trong danh sách: tên địa điểm dùng tìm kiếm nhưng không buộc
+  # phải xuất hiện thành chữ, trừ khi planner phân loại nó là exact_text/text_presence.
+  hard_gate_types: ["visual", "exact_text", "text_presence", "count", "temporal"]
+  # Tăng: chỉ hard-gate khi planner rất chắc về loại điều kiện.
+  # Giảm: nhiều điều kiện được áp hard-gate hơn.
+  classification_confidence_threshold: 0.65
+  # Tăng: VLM phải chắc hơn rằng bằng chứng thật sự xuất hiện trong frame.
+  # Giảm: dễ chấp nhận frame hơn nhưng tăng nguy cơ nhận nhầm.
+  criterion_confidence_threshold: 0.65
+
+# Nhánh riêng cho query TRAKE có E1, E2, ... theo thứ tự trong cùng một video.
+multi_event:
+  enabled: true
+  # Tăng để thử thêm video bằng VLM; chính xác hơn nhưng tăng số lượt API.
+  candidate_videos: 3
+  # Số điểm CLIP mạnh nhất của mỗi event được giữ trong từng video.
+  top_frames_per_event_per_video: 4
+  # Mở rộng frame trước/sau mỗi điểm CLIP để bắt đúng cảnh đầu tiên/chuyển cảnh.
+  neighbor_radius: 2
+  # Chặn tổng số ảnh gửi VLM cho một video.
+  max_candidates_per_video: 80
+  # Nếu lượt CLIP thiếu một event, chỉ quét đều video có độ phủ event cao nhất.
+  uniform_fallback_enabled: true
+  # Tăng để cứu thêm video nhưng mỗi video thêm một lượt VLM.
+  uniform_fallback_videos: 1
+  # Số keyframe rải đều trên toàn video triển vọng.
+  uniform_fallback_frames: 48
+  # Trần ảnh của lượt quét đều, gồm cả candidate CLIP ban đầu.
+  uniform_fallback_max_candidates: 120
+
+# QA trả đúng 5 video ứng viên kèm frame bằng chứng, không tự bịa đáp án khi thiếu tên.
+# Tăng screening_videos/max_rounds: tăng recall nhưng tốn thêm ảnh/API.
+# Tăng representatives_per_video: kiểm tra thứ tự và số lượng xuyên đoạn tốt hơn,
+# nhưng gửi nhiều ảnh hơn. max_candidates_per_video phải >= representatives_per_video.
+# Tăng minimum_confidence: khó được verified hơn; không thay đổi 5 kết quả review.
+qa:
+  enabled: true
+  result_count: 5
+  # Số video được giữ trong bảng xếp hạng chẩn đoán. Phải đủ cho mọi round.
+  retrieval_shortlist_size: 180
+  # Mỗi round VLM xem đúng 5 video và trả đủ 5; chỉ mở round 2 nếu chưa verified.
+  candidate_videos: 5
+  max_rounds: 2
+  fallback_on_unverified: true
+  # Screening xem ít frame của top 30 video rồi chọn 10 video vào hai round chi tiết.
+  screening_enabled: true
+  screening_videos: 30
+  screening_frames_per_video: 8
+  # CLIP tìm độc lập từng bằng chứng thay vì ép mọi chi tiết vào một frame.
+  max_retrieval_criteria: 7
+  top_frames_per_criterion_per_video: 2
+  # Một tiêu chí được tính là được phủ khi video nằm trong top 80 cho tiêu chí đó.
+  coverage_rank_cutoff: 80
+  # Điểm video = 50% số tiêu chí phủ + 30% chất lượng bằng chứng + 20% query đầy đủ.
+  coverage_weight: 0.50
+  evidence_score_weight: 0.30
+  main_query_weight: 0.20
+  representatives_per_video: 24
+  max_candidates_per_video: 32
+  minimum_confidence: 0.75
+
+# Chỉ áp dụng khi QA được nhận diện/ép là long_range_temporal. Luồng QA thường
+# vẫn giữ nguyên 24 representative frames và chi phí cũ.
+qa_long_range:
+  enabled: true
+  # true: dùng qa_mode do planner LLM trả về; false: chỉ chạy khi ép thủ công.
+  auto_detect: true
+  # Luôn giữ top video theo toàn query, kể cả screening/coverage đánh giá thiếu event.
+  preserve_main_query_videos: 10
+  # Thêm truy vấn CLIP riêng cho từng cảnh và cho nơi có thể chứa đáp án.
+  include_event_queries: true
+  max_event_queries: 4
+  answer_locator_query_enabled: true
+  # Tăng các giá trị này để phủ timeline dày hơn; đổi lại tốn image tokens hơn.
+  screening_frames_per_video: 12
+  representatives_per_video: 48
+  max_candidates_per_video: 64
+
+# Chỉ kích hoạt khi KIS có hành động/chi tiết phân tán qua nhiều thời điểm.
+# KIS tĩnh vẫn dùng nguyên luồng primary -> Rescue Zoom -> fallback cũ.
+temporal_kis:
+  enabled: true
+  # Mỗi round so sánh 5 video; tăng max_rounds để thử thêm nhóm nếu chưa verified.
+  candidate_videos: 5
+  max_rounds: 2
+  fallback_on_unverified: true
+  # Bảng CLIP chẩn đoán và lượt screening thưa trước khi kiểm tra chi tiết.
+  retrieval_shortlist_size: 120
+  screening_enabled: true
+  screening_videos: 30
+  screening_frames_per_video: 8
+  # Số criterion dùng retrieval và số hit CLIP giữ lại cho mỗi criterion/video.
+  max_retrieval_criteria: 7
+  top_frames_per_criterion_per_video: 2
+  coverage_rank_cutoff: 80
+  # Ba trọng số phải có tổng bằng 1.0.
+  coverage_weight: 0.50
+  evidence_score_weight: 0.30
+  main_query_weight: 0.20
+  # Frame rải đều giúp VLM kiểm tra diễn biến; tăng sẽ tốn thêm image tokens.
+  representatives_per_video: 24
+  max_candidates_per_video: 32
+  # Tăng để verified nghiêm hơn; không thay đổi danh sách frame review.
+  minimum_confidence: 0.65
+
+# A bounded high-detail pass for a strong primary candidate that the normal sheet
+# cannot verify. It does not affect the retrieval contact sheets.
+rescue_zoom:
+  enabled: true
+  min_primary_score: 75
+  preserve_primary_videos: 2
+  max_candidates: 16
+  neighbor_radius: 4
+  columns: 2
+  cards_per_sheet: 8
+  card_width: 700
+  card_height: 540
+  image_height: 420
+  crop_text_when_needed: true
+  text_detail_regions: ["bottom"]
+
+# Runs only after primary verification and Rescue Zoom are not accepted.
+# It samples likely videos, then examines local keyframe windows rather than all
+# keyframes in every selected video.
+fallback:
+  enabled: true
+  trigger_on_unverified: true
+  relaxed_query_enabled: true
+  relaxed_shortlist_size: 180
+  candidate_videos: 12
+  representative_frames_per_video: 16
+  selected_videos_for_deep_scan: 2
+  preserve_primary_videos: 1
+  local_scan_anchors_per_video: 2
+  local_scan_radius: 15
+  deep_scan_batch_size: 40
+  deep_scan_keep_per_video: 2
+
+runtime:
+  keep_extracted_videos: false
+  retrieval_only: false
+  # Chỉ dùng khi không truyền task_type vào pipeline.run().
+  # auto: planner tự nhận diện; kis/trake/qa: ép loại bài mặc định toàn notebook.
+  task_type_override: "auto"
+  # Chỉ có tác dụng cho QA. auto dùng planner; có thể ép single_frame,
+  # short_window hoặc long_range_temporal cho toàn notebook.
+  qa_mode_override: "auto"
