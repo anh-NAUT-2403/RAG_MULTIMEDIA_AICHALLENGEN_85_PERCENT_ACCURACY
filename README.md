@@ -480,12 +480,11 @@ fallback:
    nó không lấy frame top-1 của CLIP làm đáp án.
 8. Kết quả cuối luôn map qua `map-keyframes` trước khi trả `frame_idx`.
 
-## Chi phí và riêng tư
+## Chi phí 
 
 Contact sheet và các frame refinement được gửi tới OpenAI API. Không có toàn bộ ZIP
 hay toàn bộ video được tải lên. Hãy điều chỉnh `shortlist_size`, kích thước sheet và
-`max_sampled_frames` để kiểm soát chi phí, đồng thời bảo đảm việc gửi hình phù hợp
-với quyền sử dụng dữ liệu của bạn.
+`max_sampled_frames` để kiểm soát chi phí, đồng thời bảo đảm việc gửi hình phù hợp.
 
-Phần gọi API sử dụng OpenAI Responses API với image inputs và Structured Outputs,
-theo [tài liệu OpenAI chính thức](https://developers.openai.com/api/reference/cli/resources/responses/methods/create).
+
+
